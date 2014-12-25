@@ -9,6 +9,16 @@ import com.ant.vkgeoclasstest.ProfileFragment.OnProfileInteractionListener;
 import com.ant.vkgeoclasstest.CitiesFragment.OnCitiesInteractionListener;
 import com.ant.vkgeoclasstest.MapFragment.OnMapInteractionListener;
 import com.google.android.gms.maps.model.LatLng;
+import com.vk.sdk.VKAccessToken;
+import com.vk.sdk.VKScope;
+import com.vk.sdk.VKSdk;
+import com.vk.sdk.VKSdkListener;
+import com.vk.sdk.VKUIHelper;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKError;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
 
 import android.app.Activity;
 //import android.app.ActionBar;
@@ -23,6 +33,7 @@ import android.os.AsyncTask;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -36,43 +47,81 @@ import android.widget.TextView;
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener,
         OnProfileInteractionListener, OnCitiesInteractionListener, OnMapInteractionListener {
 
+    // Define array to store VK data
     private ArrayList<User> Users;
     private SortedSet<City> Cities;
     private SortedSet<Country> Countries;
     private User Profile;
 
+    // TODO: remove this temp string
     String out = "";
 
+    // Async Tasks for loading VK info, finding cities on map
     AsyncVKInfo asyncVKInfo;
     AsyncFindCities asyncFindCities;
-    //boolean ProfileLoaded=false;
 
+    boolean ProfileLoaded=false;
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v13.app.FragmentStatePagerAdapter}.
-     */
     SectionsPagerAdapter mSectionsPagerAdapter;
-
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
     ViewPager mViewPager;
+
+    private static final String VK_APP_ID = "4697955";
+
+    private final VKSdkListener sdkListener = new VKSdkListener() {
+
+        @Override
+        public void onAcceptUserToken(VKAccessToken token) {
+            Log.d("VkDemoApp", "onAcceptUserToken " + token);
+            startLoading();
+        }
+
+        @Override
+        public void onReceiveNewToken(VKAccessToken newToken) {
+            Log.d("VkDemoApp", "onReceiveNewToken " + newToken);
+            startLoading();
+        }
+
+        @Override
+        public void onRenewAccessToken(VKAccessToken token) {
+            Log.d("VkDemoApp", "onRenewAccessToken " + token);
+            startLoading();
+        }
+
+        @Override
+        public void onCaptchaError(VKError captchaError) {
+            Log.d("VkDemoApp", "onCaptchaError " + captchaError);
+        }
+
+        @Override
+        public void onTokenExpired(VKAccessToken expiredToken) {
+            Log.d("VkDemoApp", "onTokenExpired " + expiredToken);
+        }
+
+        @Override
+        public void onAccessDenied(VKError authorizationError) {
+            Log.d("VkDemoApp", "onAccessDenied " + authorizationError);
+        }
+
+    };
+
+    private VKRequest currentRequest, userRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
         // LOGIN VK !!!
+        VKSdk.initialize(sdkListener, VK_APP_ID);
+        VKUIHelper.onCreate(this);
 
-        // Set up the action bar.
+        if (VKSdk.wakeUpSession()) {
+            //startLoading();
+        } else {
+            VKSdk.authorize(VKScope.FRIENDS, VKScope.GROUPS, VKScope.PHOTOS, VKScope.WALL);
+        }
+
+            // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
@@ -128,13 +177,14 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //Fragment frag1 = getFragmentManager().findFragmentByTag(getFragmentTag(mViewPager.getCurrentItem()));
-        //((TextView) frag1.getView().findViewById(R.id.tvOut))
-
+        // Temp action for test
         if (id == R.id.action_settings) {
             MyApplication myApp = (MyApplication) this.getApplication();
             myApp.setLoaded(true);
 
+            //VKSdk.authorize(VKScope.FRIENDS, VKScope.GROUPS, VKScope.PHOTOS, VKScope.WALL);
+
+            // Adding Profile Fragment as a Placeholder 1 child Fragment
             Fragment currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(0));
             Fragment newFragment = new ProfileFragment().newInstance();
             FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
@@ -147,20 +197,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         return super.onOptionsItemSelected(item);
     }
 
-  /**  @Override
-    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-        // When the given tab is selected, switch to the corresponding page in
-        // the ViewPager.
-    }
-
-    @Override
-    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-    }
-
-    //@Override
-    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-    }*/
-
+    // Getting Tag name of a Fragment by position
     private String getFragmentTag(int pos){
         return "android:switcher:"+R.id.pager+":"+pos;
     }
@@ -211,7 +248,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
         @Override
         public int getCount() {
-            // Show 3 total pages.
+            // Show 4 total pages.
             return 4;
         }
 
@@ -233,6 +270,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     }
 
     @Override
+    // Interaction between Fragments and MainActivity
     public void onProfileInteraction() {
     }
 
@@ -242,6 +280,17 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     public void onMapInteraction() {
     }
 
+    // Loading VK info
+    private void startLoading() {
+        if (currentRequest != null) {
+            currentRequest.cancel();
+        }
+
+        currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
+        userRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
+    }
+
+    // Temporary initialization
     public void initClasses () {
 
         MyApplication myApp = (MyApplication) this.getApplication();
@@ -360,19 +409,14 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         public PlaceholderFragment() {
         }
 
-/*        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-        }*/
-
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-            // TODO: Set progressBar invisible when rotate
-            //MyApplication myApp = (MyApplication) getApplication();
-            //if (myApp.isLoaded()) {  ((ProgressBar) rootView.findViewById(R.id.progressBar)).setVisibility(View.GONE); }
+            // Set progressBar invisible when rotate
+            MyApplication myApp = (MyApplication) this.getActivity().getApplication();
+            if (myApp.isLoaded()) {  ((ProgressBar) rootView.findViewById(R.id.progressBar)).setVisibility(View.GONE); }
 
             return rootView;
         }
@@ -385,11 +429,6 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 switch (sectionNumber) {
                     case 1: {
                     }
-                   /* case 2: {
-                        Fragment currFragment = new CitiesFragment().newInstance();
-                        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-                        transaction.add(view.getId(), currFragment).commit();
-                    }*/
                 }
             }
 
@@ -398,12 +437,6 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         @Override
         public void onDetach() {
             super.onDetach();
-                /*Fragment currFragment = getChildFragmentManager().findFragmentByTag("fragmentProfile");
-                if (currFragment != null){
-                    FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-                    transaction.remove(currFragment).commit();
-                }*/
-
         }
 
     }
