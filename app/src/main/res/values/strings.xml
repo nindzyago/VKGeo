@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">VKGeoClassTest</string>
+    <string name="title_section1">Profile</string>
+    <string name="title_section2">Map</string>
+    <string name="title_section3">Cities</string>
+    <string name="title_section4">Countries</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_profile_fragment">Profile</string>
+    <string name="hello_cities_fragment">Cities</string>
+    <string name="hello_map_fragment">Map</string>
+
+</resources>
