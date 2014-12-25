@@ -401,8 +401,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 /*Fragment currFragment = getChildFragmentManager().findFragmentByTag("fragmentProfile");
                 if (currFragment != null){
                     FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-                    transaction.remove(currFragment).commit();*/
-                }
+                    transaction.remove(currFragment).commit();
+                }*/
 
         }
 
