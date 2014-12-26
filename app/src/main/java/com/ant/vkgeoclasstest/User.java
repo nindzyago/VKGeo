@@ -9,7 +9,7 @@ public class User extends Location{
     private String name;
     private City city;
     private Country country;
-    private URL photo;
+    private String photo;
 
     private static int count=0;
 
@@ -38,11 +38,11 @@ public class User extends Location{
         return count;
     }
 
-    public URL getPhoto() {
+    public String getPhoto() {
         return photo;
     }
 
-    public void setPhoto(URL photo) {
+    public void setPhoto(String photo) {
         this.photo = photo;
     }
 }

@@ -9,7 +9,8 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.net.URL;
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,18 +22,18 @@ import java.util.SortedSet;
 public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
 
         private Context mContext;
-        private ArrayList<Map<String,URL>>  mListDataHeader;
+        private ArrayList<Map<String,String>>  mListDataHeader;
         private int mLayoutDataHeader;
-        private Map<String, ArrayList<Map<String,URL>>> mListDataChild;
+        private Map<String, ArrayList<Map<String,String>>> mListDataChild;
         private int mLayoutDataChild;
 
         private ChildViewHolder childViewHolder;
             private GroupViewHolder groupViewHolder;
 
         public ImageTextExpandableListAdapter (Context context,
-                                       ArrayList<Map<String,URL>>  listDataHeader,
+                                       ArrayList<Map<String,String>>  listDataHeader,
                                        int layoutDataHeader,
-                                       Map<String, ArrayList<Map<String,URL>>> listDataChild,
+                                       Map<String, ArrayList<Map<String,String>>> listDataChild,
                                        int layoutDataChild) {
 
             mContext = context;
@@ -49,7 +50,7 @@ public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
         }
 
         @Override
-        public Map<String,URL> getGroup(int groupPosition) {
+        public Map<String,String> getGroup(int groupPosition) {
             return mListDataHeader.get(groupPosition);
         }
 
@@ -64,7 +65,7 @@ public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
 
             String groupName="";
             for (String key : getGroup(groupPosition).keySet()){ groupName = key;  }
-            URL groupImage = getGroup(groupPosition).get(groupName);
+            String groupImage = getGroup(groupPosition).get(groupName);
 
             if (convertView == null) {
 
@@ -89,12 +90,13 @@ public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
 
             if (groupImage != null) {
                 //groupViewHolder.mGroupImage.setImageBitmap(groupImage);
-                groupViewHolder.mGroupImage
-                        .setImageResource(R.drawable.ic_launcher);
+
+                //groupViewHolder.mGroupImage
+                  //      .setImageResource(R.drawable.ic_launcher);
 
             } else {
-                groupViewHolder.mGroupImage
-                        .setImageResource(R.drawable.ic_launcher);
+                //groupViewHolder.mGroupImage
+                  //      .setImageResource(R.drawable.ic_launcher);
             }
 
             groupViewHolder.mGroupName.setText(groupName);
@@ -112,8 +114,8 @@ public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
         }
 
         @Override
-        public Map<String, URL> getChild(int groupPosition, int childPosition) {
-            Map<String, URL> map = new HashMap<String,URL>();
+        public Map<String, String> getChild(int groupPosition, int childPosition) {
+            Map<String, String> map = new HashMap<String,String>();
             for (String key : mListDataHeader.get(groupPosition).keySet()) {
                 map = mListDataChild.get(key)
                         .get(childPosition);
@@ -130,10 +132,11 @@ public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
         public View getChildView(int groupPosition, final int childPosition,
                                  boolean isLastChild, View convertView, ViewGroup parent) {
 
-            String childName="";
+            String childName = "";
             for (String key : getChild(groupPosition, childPosition).keySet()) {
-                childName = key;}
-            URL childImage = getChild(groupPosition, childPosition).get(childName);
+                childName = key;
+            }
+            String childImage = getChild(groupPosition, childPosition).get(childName);
 
             final int mGroupPosition = groupPosition;
 
@@ -160,7 +163,18 @@ public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
 
             childViewHolder.mChildName.setText(childName);
 
-            childViewHolder.mChildImage.setImageResource(R.drawable.ic_launcher);
+            if (childImage != "") {
+                Picasso.with(mContext).load(childImage)
+                        //.resize(30,30)
+                        .transform(new CircleTransform())
+                        .into(childViewHolder.mChildImage);
+            } else {
+                String url = "http://vkontakte.ru/images/camera_b.gif";
+                Picasso.with(mContext).load(url)
+                        //.resize(30,30)
+                        .transform(new CircleTransform())
+                        .into(childViewHolder.mChildImage);
+            }
 
             return convertView;
         }
@@ -178,7 +192,7 @@ public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
 
         public class GroupItem {
             String groupName;
-            URL groupImage;
+            String groupImage;
         }
 
         public final class GroupViewHolder {

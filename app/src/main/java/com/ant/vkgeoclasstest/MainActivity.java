@@ -5,6 +5,9 @@ import java.util.Locale;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.squareup.picasso.Picasso;
+
+
 import com.ant.vkgeoclasstest.ProfileFragment.OnProfileInteractionListener;
 import com.ant.vkgeoclasstest.CitiesFragment.OnCitiesInteractionListener;
 import com.ant.vkgeoclasstest.MapFragment.OnMapInteractionListener;
@@ -16,12 +19,18 @@ import com.vk.sdk.VKSdkListener;
 import com.vk.sdk.VKUIHelper;
 import com.vk.sdk.api.VKApi;
 import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKBatchRequest;
 import com.vk.sdk.api.VKError;
 import com.vk.sdk.api.VKParameters;
 import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
+import com.vk.sdk.api.model.VKApiUserFull;
+import com.vk.sdk.api.model.VKList;
+import com.vk.sdk.api.model.VKUsersArray;
 
 import android.app.Activity;
 //import android.app.ActionBar;
+import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBar.Tab;
 import android.support.v7.app.ActionBar.TabListener;
@@ -104,8 +113,6 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
     };
 
-    private VKRequest currentRequest, userRequest;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,12 +123,14 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         VKUIHelper.onCreate(this);
 
         if (VKSdk.wakeUpSession()) {
-            //startLoading();
+            startLoading();
         } else {
             VKSdk.authorize(VKScope.FRIENDS, VKScope.GROUPS, VKScope.PHOTOS, VKScope.WALL);
         }
 
-            // Set up the action bar.
+
+
+        // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
@@ -156,10 +165,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             .setTabListener(this));
            }
 
-        // Getting VK information in AsyncTask
-        asyncVKInfo = new AsyncVKInfo();
-        asyncVKInfo.execute();
-
+        
     }
 
 
@@ -179,19 +185,6 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
         // Temp action for test
         if (id == R.id.action_settings) {
-            MyApplication myApp = (MyApplication) this.getApplication();
-            myApp.setLoaded(true);
-
-            //VKSdk.authorize(VKScope.FRIENDS, VKScope.GROUPS, VKScope.PHOTOS, VKScope.WALL);
-
-            // Adding Profile Fragment as a Placeholder 1 child Fragment
-            Fragment currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(0));
-            Fragment newFragment = new ProfileFragment().newInstance();
-            FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
-            transaction.add(R.id.fragmentMain, newFragment, "fragmentProfile").commit();
-
-            ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
-
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -282,12 +275,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
     // Loading VK info
     private void startLoading() {
-        if (currentRequest != null) {
-            currentRequest.cancel();
+        // Getting VK information in AsyncTask
+        MyApplication myApp = (MyApplication) getApplication();
+        if (!myApp.isLoaded()) {
+            asyncVKInfo = new AsyncVKInfo();
+            asyncVKInfo.execute();
         }
-
-        currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
-        userRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
     }
 
     // Temporary initialization
@@ -345,21 +338,125 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     }
 
     class AsyncVKInfo extends AsyncTask<Void, Void, Void> {
+        private VKRequest usersRequest, profileRequest;
+        private String userName, userCity, userCountry, userPhoto;
+        private User currentUser;
+        private City currentCity;
+        private Country currentCountry;
+
         @Override
         protected void onPreExecute() {
 
         }
         @Override
         protected Void doInBackground(Void... params) {
-            initClasses();
+            //initClasses();
+            final MyApplication myApp = (MyApplication) getApplication();
+            myApp.clearData();
+            Cities = myApp.getCities();
+            Users = myApp.getUsers();
+            Countries = myApp.getCountries();
+
+            if (usersRequest != null)   { usersRequest.cancel();   }
+            if (profileRequest != null) { profileRequest.cancel(); }
+
+            usersRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
+            profileRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
+
+           // if (userId != 0) {
+           //     currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
+           //     userRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
+                //currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.USER_ID, userId));
+                //userRequest = VKApi.users().get(VKParameters.from(VKApiConst.USER_ID, userId));
+           // }
+            
+            VKBatchRequest batch = new VKBatchRequest(usersRequest, profileRequest);
+            batch.executeWithListener(new VKBatchRequest.VKBatchRequestListener() {
+                @Override
+                public void onComplete(VKResponse[] responses) {
+                    super.onComplete(responses);
+
+                    VKList<VKApiUserFull> VKUser = (VKList<VKApiUserFull>) responses[1].parsedModel;
+
+                    for (VKApiUserFull user : VKUser) {
+                        Profile = new User(user.id, user.toString());
+                        currentCity = new City(user.city.id, user.city.toString());
+                        currentCountry = new Country(user.country.id, user.country.toString());
+
+                        Profile.setCity(currentCity);
+                        Profile.setCountry(currentCountry);
+
+                        userPhoto = "";
+                        //if (user.photo_50 != null) {userPhoto = user.photo_50.toString();  	   }
+                        //if (user.photo_100 != null) {userPhoto = user.photo_100.toString();  	   }
+                        if (user.photo_200 != null) {
+                            userPhoto = user.photo_200.toString();
+                        }
+                        Profile.setPhoto(userPhoto);
+                        //Picasso.with(getApplicationContext()).load(url).into(ivUser);
+                    }
+
+                    VKUsersArray usersArray = (VKUsersArray) responses[0].parsedModel;
+                    for (VKApiUserFull user : usersArray) {
+                        currentUser = new User(user.id, user.toString());
+                        userPhoto = "";
+                        //if (user.photo_50 != null) {userPhoto = user.photo_50.toString();  	   }
+                        //if (user.photo_100 != null) {userPhoto = user.photo_100.toString();  	   }
+                        if (user.photo_200 != null) {
+                            userPhoto = user.photo_200.toString();
+                        }
+                        currentUser.setPhoto(userPhoto);
+
+                        if (user.city != null) {
+                            currentCity = new City(user.city.id, user.city.toString());
+                            if (Cities.contains(currentCity)) {
+                                currentCity = Cities.tailSet(currentCity).first();
+                            }
+                            if (user.country != null) {
+                                currentCountry = new Country(user.country.id, user.country.toString());
+                                if (Countries.contains(currentCountry)) {
+                                    currentCountry = Countries.tailSet(currentCountry).first();
+                                }
+                                currentCity.setCountry(currentCountry);
+                                Countries.add(currentCountry);
+                            }
+                            currentUser.setCity(currentCity);
+                            Cities.add(currentCity);
+                        } else {
+                            //users.add(new User(user.id, user.toString(), cityStr));
+                            //userIds.put(user.toString(), user.id);
+                        }
+                        Users.add(currentUser);
+                    }
+                    myApp.setCities(Cities);
+                    myApp.setCountries(Countries);
+                    myApp.setUsers(Users);
+                    myApp.setProfile(Profile);
+
+                    MyApplication myApp = (MyApplication) getApplication();
+
+                    Fragment currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(0));
+                    Fragment newFragment = new ProfileFragment().newInstance();
+                    FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
+                    transaction.add(R.id.fragmentMain, newFragment, "fragmentProfile").commit();
+
+                    ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
+
+                    myApp.setLoaded(true);
+
+                }
+            });
             return null;
         }
+
         @Override
         protected void onProgressUpdate(Void... values) {
 
         }
         @Override
         protected void onPostExecute(Void result) {
+            // Adding Profile Fragment as a Placeholder 1 child Fragment
+
             asyncFindCities = new AsyncFindCities();
             asyncFindCities.execute();
         }
@@ -440,5 +537,27 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         }
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        VKUIHelper.onResume(this);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        VKUIHelper.onActivityResult(this, requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        VKUIHelper.onDestroy(this);
+//            if (currentRequest != null) {
+//                currentRequest.cancel();
+//            }
+    }
+
 
 }

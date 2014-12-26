@@ -17,6 +17,8 @@ import android.widget.ProgressBar;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import org.w3c.dom.Text;
 
 import java.net.URL;
@@ -43,6 +45,7 @@ public class ProfileFragment extends Fragment  {
     // TODO: Rename and change types of parameters
     private ArrayList<User> Users;
     private SortedSet<City> Cities;
+    private SortedSet<Country> Countries;
     private User Profile;
     ProgressDialog progress;
     ProgressBar progressBar;
@@ -112,9 +115,19 @@ public class ProfileFragment extends Fragment  {
             prepareAdapter();
             prepareHeader();
             Profile = myApp.getProfile();
+            Picasso.with(getActivity().getApplicationContext()).load(Profile.getPhoto())
+                    .transform(new CircleTransform())
+                    .into((ImageView) v.findViewById(R.id.ivProfile));
+
             ((TextView) v.findViewById(R.id.tvProfileUser)).setText(Profile.getName());
             ((TextView) v.findViewById(R.id.tvProfileCity)).setText(Profile.getCity().getName()
-                    + ", " + Profile.getCity().getCountry().getName());
+                    + ", " + Profile.getCountry().getName());
+
+            String str = "" + Users.size();
+            ((TextView) v.findViewById(R.id.tvProfileUsers)).setText("" + Users.size());
+            ((TextView) v.findViewById(R.id.tvProfileCities)).setText("" + Cities.size());
+            ((TextView) v.findViewById(R.id.tvProfileCountries)).setText("" + Countries.size());
+
             lvUsers = (ExpandableListView) v.findViewById(R.id.lvUsers);
             //lvUsers.addHeaderView(headerUsers,"tmp", false);
             lvUsers.setAdapter(lvTest);
@@ -139,23 +152,26 @@ public class ProfileFragment extends Fragment  {
         MyApplication myApp = (MyApplication) getActivity().getApplication();
         Users = myApp.getUsers();
         Cities = myApp.getCities();
+        Countries = myApp.getCountries();
 
-        ArrayList<Map<String,URL>>  mListDataHeader = new ArrayList<Map<String,URL>>();
-        Map<String, ArrayList<Map<String,URL>>> mListDataChild = new HashMap<String, ArrayList<Map<String,URL>>> ();
-        ArrayList<Map<String,URL>> tempDataChild = new ArrayList<Map<String,URL>>();
+        ArrayList<Map<String,String>>  mListDataHeader = new ArrayList<Map<String,String>>();
+        Map<String, ArrayList<Map<String,String>>> mListDataChild = new HashMap<String, ArrayList<Map<String,String>>> ();
+        ArrayList<Map<String,String>> tempDataChild = new ArrayList<Map<String,String>>();
 
 
         for (City city : Cities) {
             groupfriends = new ArrayList<Map<String,String>>();
-            tempDataChild = new ArrayList<Map<String,URL>>();
+            tempDataChild = new ArrayList<Map<String,String>>();
             for (User user : Users) {
-                if (user.getCity().equals(city)) {
-                    m = new HashMap<String,String>();
-                    m.put("user", user.getName());
-                    groupfriends.add(m);
-                    m = new HashMap<String,URL>();
-                    m.put(user.getName(), user.getPhoto());
-                    tempDataChild.add(m);
+                if (user.getCity() != null) {
+                    if (user.getCity().equals(city)) {
+                        m = new HashMap<String, String>();
+                        m.put("user", user.getName());
+                        groupfriends.add(m);
+                        m = new HashMap<String, String>();
+                        m.put(user.getName(), user.getPhoto());
+                        tempDataChild.add(m);
+                    }
                 }
             }
             m = new HashMap<String,String>();
@@ -164,7 +180,7 @@ public class ProfileFragment extends Fragment  {
             groupcities.add(m);
             groupped.add(groupfriends);
 
-            m = new HashMap<String,URL>();
+            m = new HashMap<String,String>();
             m.put(cityName, null);
             mListDataHeader.add(m);
 
@@ -172,7 +188,7 @@ public class ProfileFragment extends Fragment  {
 
         }
 
-        lvUsersAdapter = new SimpleExpandableListAdapter(
+        /*lvUsersAdapter = new SimpleExpandableListAdapter(
                 getActivity().getApplicationContext(),
                 groupcities,
                 R.layout.users_group,
@@ -181,7 +197,7 @@ public class ProfileFragment extends Fragment  {
                 groupped,
                 R.layout.users_group,
                 new String[] {"user"},
-                new int[] {R.id.tvGroup});
+                new int[] {R.id.tvGroup});*/
 
         lvTest = new ImageTextExpandableListAdapter(
                 getActivity().getApplicationContext(),
