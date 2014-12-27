@@ -18,6 +18,9 @@ import java.util.SortedSet;
 
 /**
  * Created by apple on 11.12.14.
+ *
+ * Adapter to show Iamge + Text in ExpandableListView
+ * Using ViewHolder template
  */
 public class ImageTextExpandableListAdapter extends BaseExpandableListAdapter {
 

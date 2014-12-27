@@ -8,6 +8,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Marker;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -18,6 +22,11 @@ import android.view.ViewGroup;
  * create an instance of this fragment.
  */
 public class MapFragment extends Fragment {
+
+    SupportMapFragment mapFragment;
+    GoogleMap map;
+    Marker marker;
+
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     //private static final String ARG_PARAM1 = "param1";
@@ -61,11 +70,31 @@ public class MapFragment extends Fragment {
         }*/
     }
 
+    // Getting Tag name of a Fragment by position
+    private String getFragmentTag(int pos){
+        return "android:switcher:"+R.id.pager+":"+pos;
+    }
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
+        MyApplication myApp = (MyApplication) getActivity().getApplication();
+        if (myApp.isLoaded()) {
+            mapFragment = (SupportMapFragment)
+                    getParentFragment().getChildFragmentManager()
+                    .findFragmentByTag("fragmentMap")
+                    .getChildFragmentManager()
+                    .findFragmentById(R.id.map);
+            map = mapFragment.getMap();
+            if (map == null) {
+                getActivity().finish();
+                //return;
+            }
+        } else
+        {}
 
         return v;
     }

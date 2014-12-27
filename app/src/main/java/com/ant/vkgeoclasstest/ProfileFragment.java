@@ -3,6 +3,7 @@ package com.ant.vkgeoclasstest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -52,7 +53,7 @@ public class ProfileFragment extends Fragment  {
 
     ExpandableListView lvUsers;
     SimpleExpandableListAdapter lvUsersAdapter;
-    ImageTextExpandableListAdapter lvTest;
+    ImageTextExpandableListAdapter lvAdapter;
     View headerUsers;
 
     private ArrayList<Map<String,String>> groupcities = new ArrayList<Map<String,String>>();
@@ -109,15 +110,23 @@ public class ProfileFragment extends Fragment  {
         tvOut = (TextView) v.findViewById(R.id.tvOut);
         //progressBar = (ProgressBar) v.findViewById(R.id.progressBar);
 
-        MyApplication myApp = (MyApplication) this.getActivity().getApplication();
+        final MyApplication myApp = (MyApplication) this.getActivity().getApplication();
         if (myApp.isLoaded()) {
             //progressBar.setVisibility(View.GONE);
             prepareAdapter();
             prepareHeader();
             Profile = myApp.getProfile();
-            Picasso.with(getActivity().getApplicationContext()).load(Profile.getPhoto())
-                    .transform(new CircleTransform())
-                    .into((ImageView) v.findViewById(R.id.ivProfile));
+            if (Profile.getPhoto()!="") {
+                Picasso.with(getActivity().getApplicationContext()).load(Profile.getPhoto())
+                        .transform(new CircleTransform())
+                        .into((ImageView) v.findViewById(R.id.ivProfile));
+            } else {
+                String url = "http://vkontakte.ru/images/camera_b.gif";
+                Picasso.with(getActivity().getApplicationContext()).load(url)
+                        .transform(new CircleTransform())
+                        .into((ImageView) v.findViewById(R.id.ivProfile));
+            }
+
 
             ((TextView) v.findViewById(R.id.tvProfileUser)).setText(Profile.getName());
             ((TextView) v.findViewById(R.id.tvProfileCity)).setText(Profile.getCity().getName()
@@ -130,7 +139,29 @@ public class ProfileFragment extends Fragment  {
 
             lvUsers = (ExpandableListView) v.findViewById(R.id.lvUsers);
             //lvUsers.addHeaderView(headerUsers,"tmp", false);
-            lvUsers.setAdapter(lvTest);
+            lvUsers.setAdapter(lvAdapter);
+
+            lvUsers.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+                public boolean onChildClick(ExpandableListView parent, View v,
+                                            int groupPosition, int childPosition, long id) {
+                    Map<String, String> child = (Map<String, String>) lvAdapter.getChild(groupPosition, childPosition);
+                    String ids = "";
+                    for (String key : child.keySet()) {
+                        ids = key;
+                    }
+                    int userId = 0;
+                    for (User user : Users) {
+                        if (user.getName().equals(ids)) {
+                            userId=user.getId();
+                        }
+                    }
+                    Intent intent = new Intent(getActivity(), MainActivity.class);
+                    intent.putExtra("userId", userId);
+                    myApp.setLoaded(false);
+                    getActivity().startActivity(intent);
+                    return true;
+                }
+            });
 
         } else {
             //progressBar.setVisibility(View.VISIBLE);
@@ -188,18 +219,7 @@ public class ProfileFragment extends Fragment  {
 
         }
 
-        /*lvUsersAdapter = new SimpleExpandableListAdapter(
-                getActivity().getApplicationContext(),
-                groupcities,
-                R.layout.users_group,
-                new String[] {"city"},
-                new int[] {R.id.tvGroup},
-                groupped,
-                R.layout.users_group,
-                new String[] {"user"},
-                new int[] {R.id.tvGroup});*/
-
-        lvTest = new ImageTextExpandableListAdapter(
+        lvAdapter = new ImageTextExpandableListAdapter(
                 getActivity().getApplicationContext(),
                 mListDataHeader, R.layout.users_group,
                 mListDataChild, R.layout.users_item);

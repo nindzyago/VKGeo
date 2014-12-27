@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.google.android.gms.maps.SupportMapFragment;
 import com.squareup.picasso.Picasso;
 
 
@@ -62,6 +63,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     private SortedSet<Country> Countries;
     private User Profile;
 
+    private int userId;
+
     // TODO: remove this temp string
     String out = "";
 
@@ -117,6 +120,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Getting Extra Variables from Intent
+
+        Intent intent = getIntent();
+        userId = intent.getIntExtra("userId", 0);
+        //infoCity = intent.getStringExtra("infoCity");
 
         // LOGIN VK !!!
         VKSdk.initialize(sdkListener, VK_APP_ID);
@@ -363,12 +372,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             usersRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
             profileRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
 
-           // if (userId != 0) {
-           //     currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
-           //     userRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
+            if (userId != 0) {
+                usersRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
+                profileRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
                 //currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.USER_ID, userId));
                 //userRequest = VKApi.users().get(VKParameters.from(VKApiConst.USER_ID, userId));
-           // }
+            }
             
             VKBatchRequest batch = new VKBatchRequest(usersRequest, profileRequest);
             batch.executeWithListener(new VKBatchRequest.VKBatchRequestListener() {
@@ -439,6 +448,20 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                     Fragment newFragment = new ProfileFragment().newInstance();
                     FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
                     transaction.add(R.id.fragmentMain, newFragment, "fragmentProfile").commit();
+
+                    ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
+
+                    currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(1));
+                    newFragment = new MapFragment().newInstance();
+                    transaction = currFragment.getChildFragmentManager().beginTransaction();
+                    transaction.add(R.id.fragmentMain, newFragment, "fragmentMap").commit();
+
+                    ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
+
+                    currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(2));
+                    newFragment = new CitiesFragment().newInstance();
+                    transaction = currFragment.getChildFragmentManager().beginTransaction();
+                    transaction.add(R.id.fragmentMain, newFragment, "fragmentCities").commit();
 
                     ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
 
