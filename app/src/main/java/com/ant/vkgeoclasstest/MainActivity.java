@@ -55,7 +55,8 @@ import android.widget.TextView;
 
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener,
-        OnProfileInteractionListener, OnCitiesInteractionListener, OnMapInteractionListener {
+        OnProfileInteractionListener, OnCitiesInteractionListener, OnMapInteractionListener,
+        CountriesFragment.OnCountriesInteractionListener {
 
     // Define array to store VK data
     private ArrayList<User> Users;
@@ -279,6 +280,9 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     public void onCitiesInteraction() {
     }
 
+    public void onCountriesInteraction() {
+    }
+
     public void onMapInteraction() {
     }
 
@@ -426,10 +430,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                                 if (Countries.contains(currentCountry)) {
                                     currentCountry = Countries.tailSet(currentCountry).first();
                                 }
+                                //currentCountry.addUser();
                                 currentCity.setCountry(currentCountry);
                                 Countries.add(currentCountry);
                             }
+                            //currentCity.addUser();
                             currentUser.setCity(currentCity);
+                            currentUser.setCountry(currentCountry);
                             Cities.add(currentCity);
                         } else {
                             //users.add(new User(user.id, user.toString(), cityStr));
@@ -462,6 +469,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                     newFragment = new CitiesFragment().newInstance();
                     transaction = currFragment.getChildFragmentManager().beginTransaction();
                     transaction.add(R.id.fragmentMain, newFragment, "fragmentCities").commit();
+
+                    ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
+
+                    currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(3));
+                    newFragment = new CountriesFragment().newInstance();
+                    transaction = currFragment.getChildFragmentManager().beginTransaction();
+                    transaction.add(R.id.fragmentMain, newFragment, "fragmentCountries").commit();
 
                     ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
 

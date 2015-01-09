@@ -18,6 +18,8 @@ public class User extends Location{
     }
 
     public void setCountry(Country country) {
+
+        if (this.country == null) { country.addUser(); }
         this.country = country;
     }
 
