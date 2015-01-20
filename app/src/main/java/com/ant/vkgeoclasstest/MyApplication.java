@@ -7,12 +7,15 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Created by apple on 03.12.14.
+ * Created by Mike Antipiev on 03.12.14.
+ *
+ * Application class implements singleton template
+ *
  */
 public class MyApplication extends Application {
 
     // Store some global arrays and vars in Application class to be able access them from all activities and fragments
-    // Not sure if it's a best posibile solution, but i think it is an easiest one )
+    // Not sure if it's a best solution, but i think it's the easiest one )
 
     private ArrayList<User> Users;
     private SortedSet<City> Cities;

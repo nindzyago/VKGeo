@@ -29,21 +29,11 @@ import java.util.Map;
 import java.util.SortedSet;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ProfileFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link ProfileFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ProfileFragment extends Fragment  {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+
     private static final String ARG_PARAM1 = "profile";
     private static final String ARG_PARAM2 = "users";
 
-    // TODO: Rename and change types of parameters
     private ArrayList<User> Users;
     private SortedSet<City> Cities;
     private SortedSet<Country> Countries;
@@ -68,23 +58,9 @@ public class ProfileFragment extends Fragment  {
 
     private OnProfileInteractionListener mListener;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ProfileFragment.
-     */
 
     public static ProfileFragment newInstance() {
-    //public static ProfileFragment newInstance(ArrayList<User> users, User profile) {
-            ProfileFragment fragment = new ProfileFragment();
-      /*  Bundle args = new Bundle();
-        args.putParcelable(ARG_PARAM1, );
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);*/
+        ProfileFragment fragment = new ProfileFragment();
         return fragment;
     }
 
@@ -95,10 +71,6 @@ public class ProfileFragment extends Fragment  {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-   /*     if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }*/
     }
 
     @Override
@@ -106,9 +78,6 @@ public class ProfileFragment extends Fragment  {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_profile, container, false);
-
-        tvOut = (TextView) v.findViewById(R.id.tvOut);
-        //progressBar = (ProgressBar) v.findViewById(R.id.progressBar);
 
         final MyApplication myApp = (MyApplication) this.getActivity().getApplication();
         if (myApp.isLoaded()) {

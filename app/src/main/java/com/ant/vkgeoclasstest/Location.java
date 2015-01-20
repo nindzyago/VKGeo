@@ -3,7 +3,7 @@ package com.ant.vkgeoclasstest;
 import java.util.Collection;
 
 /**
- * Created by apple on 20.11.14.
+ * Created by Mike Antipiev on 20.11.14.
  * Basic Location class
  */
 public class Location implements Comparable<Location>{

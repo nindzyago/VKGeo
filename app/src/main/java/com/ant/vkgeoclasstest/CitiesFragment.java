@@ -24,12 +24,20 @@ import com.philjay.valuebar.colors.RedToGreenFormatter;
 import java.util.ArrayList;
 import java.util.SortedSet;
 
+/**
+ * Created by Mike Antipiev on 03.12.14.
+ *
+ * CitiesFragment class draws Cities chart
+ *
+ */
+
 
 public class CitiesFragment extends Fragment implements ValueBarSelectionListener {
 
     private ValueBar valueBar;
     private SortedSet<City> Cities;
 
+//    Interaction with MainActivity
     private OnCitiesInteractionListener mListener;
 
     public static CitiesFragment newInstance() {

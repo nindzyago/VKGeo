@@ -5,14 +5,22 @@ import com.google.android.gms.maps.model.LatLng;
 
 
 /**
- * Created by apple on 21.11.14.
+ * Created by Mike Antipiev on 21.11.14.
+ *
+ * City class to store cities information and bindngs to countries
  */
+
 public class City extends Location {
+
     private Country country;
     private LatLng coords;
     private URL photo;
 
+//    Storing users counter for this city
     private int countUsers=0;
+
+//    Static variable to store cities count
+    private static int count=0;
 
     public City () {
 
@@ -20,6 +28,7 @@ public class City extends Location {
 
     public City (int id, String name) {
         super(id, name);
+        count++;
     }
 
     public City (int id, String name, LatLng coords) {
@@ -56,5 +65,7 @@ public class City extends Location {
     public int getCountUsers() {
         return countUsers;
     }
+
+    public int getCount() {return count; }
 
 }

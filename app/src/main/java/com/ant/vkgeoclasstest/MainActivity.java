@@ -64,19 +64,20 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     private SortedSet<Country> Countries;
     private User Profile;
 
-    private int userId;
+    private int userId, cityId;
 
     // TODO: remove this temp string
     String out = "";
 
-    // Async Tasks for loading VK info, finding cities on map
+    // Async Task for loading VK info
     AsyncVKInfo asyncVKInfo;
-    AsyncFindCities asyncFindCities;
 
-    boolean ProfileLoaded=false;
+    //boolean ProfileLoaded=false;
 
     SectionsPagerAdapter mSectionsPagerAdapter;
     ViewPager mViewPager;
+    MyApplication myApp;
+
 
     private static final String VK_APP_ID = "4697955";
 
@@ -126,7 +127,10 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
         Intent intent = getIntent();
         userId = intent.getIntExtra("userId", 0);
-        //infoCity = intent.getStringExtra("infoCity");
+        cityId = intent.getIntExtra("cityId", 0);
+
+        myApp = (MyApplication) getApplication();
+
 
         // LOGIN VK !!!
         VKSdk.initialize(sdkListener, VK_APP_ID);
@@ -289,10 +293,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     // Loading VK info
     private void startLoading() {
         // Getting VK information in AsyncTask
-        MyApplication myApp = (MyApplication) getApplication();
+//        MyApplication myApp = (MyApplication) getApplication();
         if (!myApp.isLoaded()) {
             asyncVKInfo = new AsyncVKInfo();
             asyncVKInfo.execute();
+        } else {
+            //showFragments();
         }
     }
 
@@ -364,7 +370,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         @Override
         protected Void doInBackground(Void... params) {
             //initClasses();
-            final MyApplication myApp = (MyApplication) getApplication();
+//            final MyApplication myApp = (MyApplication) getApplication();
             myApp.clearData();
             Cities = myApp.getCities();
             Users = myApp.getUsers();
@@ -373,14 +379,14 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             if (usersRequest != null)   { usersRequest.cancel();   }
             if (profileRequest != null) { profileRequest.cancel(); }
 
+            // Default profile and friends request
             usersRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
             profileRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
 
+            // Selected user request
             if (userId != 0) {
                 usersRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
                 profileRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
-                //currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.USER_ID, userId));
-                //userRequest = VKApi.users().get(VKParameters.from(VKApiConst.USER_ID, userId));
             }
             
             VKBatchRequest batch = new VKBatchRequest(usersRequest, profileRequest);
@@ -449,37 +455,10 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                     myApp.setUsers(Users);
                     myApp.setProfile(Profile);
 
-                    MyApplication myApp = (MyApplication) getApplication();
-
-                    Fragment currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(0));
-                    Fragment newFragment = new ProfileFragment().newInstance();
-                    FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
-                    transaction.add(R.id.fragmentMain, newFragment, "fragmentProfile").commit();
-
-                    ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
-
-                    currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(1));
-                    newFragment = new MapFragment().newInstance();
-                    transaction = currFragment.getChildFragmentManager().beginTransaction();
-                    transaction.add(R.id.fragmentMain, newFragment, "fragmentMap").commit();
-
-                    ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
-
-                    currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(2));
-                    newFragment = new CitiesFragment().newInstance();
-                    transaction = currFragment.getChildFragmentManager().beginTransaction();
-                    transaction.add(R.id.fragmentMain, newFragment, "fragmentCities").commit();
-
-                    ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
-
-                    currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(3));
-                    newFragment = new CountriesFragment().newInstance();
-                    transaction = currFragment.getChildFragmentManager().beginTransaction();
-                    transaction.add(R.id.fragmentMain, newFragment, "fragmentCountries").commit();
-
-                    ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
+//                    MyApplication myApp = (MyApplication) getApplication();
 
                     myApp.setLoaded(true);
+                    showFragments();
 
                 }
             });
@@ -494,29 +473,38 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         protected void onPostExecute(Void result) {
             // Adding Profile Fragment as a Placeholder 1 child Fragment
 
-            asyncFindCities = new AsyncFindCities();
-            asyncFindCities.execute();
         }
 
     }
 
-    class AsyncFindCities extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected void onPreExecute() {
+    private void showFragments() {
+        Fragment currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(0));
+        Fragment newFragment = new ProfileFragment().newInstance();
+        FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
+        transaction.add(R.id.fragmentMain, newFragment, "fragmentProfile").commit();
 
-        }
-        @Override
-        protected Void doInBackground(Void... params) {
-            return null;
-        }
-        @Override
-        protected void onProgressUpdate(Void... values) {
+        ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
 
-        }
-        @Override
-        protected void onPostExecute(Void result) {
+        currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(1));
+        newFragment = new MapFragment().newInstance();
+        transaction = currFragment.getChildFragmentManager().beginTransaction();
+        transaction.add(R.id.fragmentMain, newFragment, "fragmentMap").commit();
 
-        }
+        ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
+
+        currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(2));
+        newFragment = new CitiesFragment().newInstance();
+        transaction = currFragment.getChildFragmentManager().beginTransaction();
+        transaction.add(R.id.fragmentMain, newFragment, "fragmentCities").commit();
+
+        ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
+
+        currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(3));
+        newFragment = new CountriesFragment().newInstance();
+        transaction = currFragment.getChildFragmentManager().beginTransaction();
+        transaction.add(R.id.fragmentMain, newFragment, "fragmentCountries").commit();
+
+        ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
 
     }
 

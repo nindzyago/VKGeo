@@ -14,5 +14,6 @@
     <string name="profile_users">друзей</string>
     <string name="profile_cities">городов</string>
     <string name="profile_countries">стран</string>
+    <string name="info_marker">показать друзей</string>
 
 </resources>
