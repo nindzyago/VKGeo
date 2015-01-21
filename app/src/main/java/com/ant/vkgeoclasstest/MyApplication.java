@@ -22,6 +22,7 @@ public class MyApplication extends Application {
     private SortedSet<Country> Countries;
     private User Profile;
     private boolean loaded = false;
+    private boolean founded = false;
 
     public MyApplication() {
         clearData();
@@ -31,7 +32,7 @@ public class MyApplication extends Application {
         this.Cities = new TreeSet<City>();
         this.Countries = new TreeSet<Country>();
         this.Users = new ArrayList<User>();
-        //this.Profile = new User();
+        this.Profile = new User(0,"");
     }
 
     // Getters/setters
@@ -66,6 +67,14 @@ public class MyApplication extends Application {
 
     public User getProfile () {
         return Profile;
+    }
+
+    public void setFounded(boolean founded) {
+        this.founded = founded;
+    }
+
+    public boolean isFounded() {
+        return founded;
     }
 
     public void setLoaded(boolean loaded) {

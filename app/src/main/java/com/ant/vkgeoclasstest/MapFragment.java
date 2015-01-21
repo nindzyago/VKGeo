@@ -38,7 +38,10 @@ public class MapFragment extends Fragment {
 
     private SupportMapFragment mapFragment;
     private GoogleMap map;
-    private HashMap<Marker, Integer> cityMarker = new HashMap<Marker, Integer>();
+    MyApplication myApp;
+
+    // Marker to City binding
+    private HashMap<Marker, City> cityMarker = new HashMap<Marker, City>();
 
     private SortedSet<City> Cities;
     private User Profile;
@@ -46,8 +49,10 @@ public class MapFragment extends Fragment {
     private AsyncFindCities asyncFindCities;
     private ProgressBar progressCities;
 
+    ThreadControl tControl = new ThreadControl();
 
     private OnMapInteractionListener mListener;
+    private OnCitySelectionListener csListener;
 
     public static MapFragment newInstance() {
         MapFragment fragment = new MapFragment();
@@ -73,7 +78,7 @@ public class MapFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
-        MyApplication myApp = (MyApplication) getActivity().getApplication();
+        myApp = (MyApplication) getActivity().getApplication();
         if (myApp.isLoaded()) {
             Cities = myApp.getCities();
             Profile = myApp.getProfile();
@@ -89,20 +94,37 @@ public class MapFragment extends Fragment {
                 getActivity().finish();
             }
 
-            // Start async task to show cities
-            asyncFindCities = new AsyncFindCities();
-            asyncFindCities.execute();
+            //if (!myApp.isFounded()) {
+                // Start async task to show cities
+                asyncFindCities = new AsyncFindCities();
+                asyncFindCities.execute();
+            //} else {
+                //tControl.resume();
+            //}
 
-/*            map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener(){
+            map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener(){
                 @Override
                 public void onInfoWindowClick(Marker marker){
-                    Intent intent = new Intent(getActivity().getApplicationContext(), MainActivity.class);
-                    intent.putExtra("cityId", cityMarker.get(marker));
-                    intent.putExtra("userId", Profile.getId());
-                    startActivity(intent);
+                    //TODO: Remove this
+                    //Intent intent = new Intent(getActivity().getApplicationContext(), MainActivity.class);
+                    //intent.putExtra("cityId", cityMarker.get(marker));
+                    //intent.putExtra("userId", Profile.getId());
+                    //startActivity(intent);
+
+                    // Select Friends Tab in MainActivity
+                    mListener.onMapInteraction();
+
+                    // Call ProfileFragment listener to show selected city
+                    // TODO: try / catch this section
+                    csListener = (OnCitySelectionListener) getActivity()
+                            .getSupportFragmentManager().findFragmentByTag(getFragmentTag(0))
+                            .getChildFragmentManager()
+                            .findFragmentByTag("fragment0");
+
+                    csListener.onCitySelection(cityMarker.get(marker));
 
                 }
-            });*/
+            });
 
         } else
         {}
@@ -125,13 +147,14 @@ public class MapFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
+        //tControl.pause();
         mListener = null;
-        asyncFindCities.cancel(true);
+        csListener = null;
+        if (asyncFindCities != null) {
+            asyncFindCities.cancel(true);
+        }
     }
 
-    public interface OnMapInteractionListener {
-        public void onMapInteraction();
-    }
 
     public LatLng getLocationFromAddress(String strAddress){
         // Find location of city with GeoCoder
@@ -171,12 +194,13 @@ public class MapFragment extends Fragment {
 
     class AsyncFindCities extends AsyncTask<Void, Map<Integer, City>, Void> {
 
+
         // Async task to put markers on map
         @Override
         protected void onPreExecute() {
-            // Get global array Cities and set progressbar properties
             progressCities.setMax(Cities.size());
             progressCities.setVisibility(View.VISIBLE);
+            myApp.setFounded(true);
         }
         @Override
         protected Void doInBackground(Void... params) {
@@ -192,6 +216,14 @@ public class MapFragment extends Fragment {
                     // Show founded city in progress
                     publishProgress(currentCity);
                 }
+                /*while (true) {
+                    //Pause work if control is paused.
+                    tControl.waitIfPaused();
+                    //Stop work if control is cancelled.
+                    if (tControl.isCancelled()) {
+                        break;
+                    }
+                }*/
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -200,29 +232,29 @@ public class MapFragment extends Fragment {
         @Override
         protected void onProgressUpdate(Map<Integer, City>... values) {
             super.onProgressUpdate(values);
+            // Extract city information from values
             for (Map.Entry entry : values[0].entrySet()) {
                 int pos = (int) entry.getKey();
                 City city = (City) entry.getValue();
-
-                /*if (city.equals(userCity)) {
-                    map.addMarker(new MarkerOptions()
-                            .position(pos)
+                Marker marker;
+                // If city equals Users's city draw a home marker
+                if (city.equals(Profile.getCity())) {
+                    marker = map.addMarker(new MarkerOptions()
+                            .position(city.getCoords())
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                            .snippet("показать друзей")
-                            .title(city));
-                } else {*/
-                /*
-                Marker marker = map.addMarker(new MarkerOptions()
+                            .snippet(getString(R.string.info_marker))
+                            .title(city.getName() + " ("+city.getCountUsers() + ")"));
+                } else {
+                    // Else draw a regular marker
+                    marker = map.addMarker(new MarkerOptions()
                             .position(city.getCoords())
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.knobred))
                                     // .defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
                             .snippet(getString(R.string.info_marker))
-                            .title(city.getName() + " ("+city.getCountUsers() + ")"));
-
-
-                //map.addMarker(marker);
-                cityMarker.put(marker, city.getId());
-                */
+                            .title(city.getName() + " (" + city.getCountUsers() + ")"));
+                }
+                // Bind marker to city
+                cityMarker.put(marker, city);
                 progressCities.setProgress(pos);
             }
 
@@ -232,6 +264,14 @@ public class MapFragment extends Fragment {
             progressCities.setVisibility(View.GONE);
         }
 
+    }
+
+    public interface OnMapInteractionListener {
+        public void onMapInteraction();
+    }
+
+    public interface OnCitySelectionListener {
+        public void onCitySelection(City city);
     }
 
 }

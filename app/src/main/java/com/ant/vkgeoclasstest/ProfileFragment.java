@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.SortedSet;
 
 
-public class ProfileFragment extends Fragment  {
+public class ProfileFragment extends Fragment  implements MapFragment.OnCitySelectionListener {
 
     private static final String ARG_PARAM1 = "profile";
     private static final String ARG_PARAM2 = "users";
@@ -67,6 +67,15 @@ public class ProfileFragment extends Fragment  {
     public ProfileFragment() {
         // Required empty public constructor
     }
+
+    @Override
+    public void onCitySelection(City city) {
+        // Show and expand group of selected city
+        int pos = Cities.headSet(city).size();
+        lvUsers.expandGroup(pos);
+        lvUsers.setSelectedGroup(pos);
+    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -127,6 +136,7 @@ public class ProfileFragment extends Fragment  {
                     Intent intent = new Intent(getActivity(), MainActivity.class);
                     intent.putExtra("userId", userId);
                     myApp.setLoaded(false);
+                    myApp.setFounded(false);
                     getActivity().startActivity(intent);
                     return true;
                 }

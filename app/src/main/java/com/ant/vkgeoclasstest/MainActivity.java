@@ -65,6 +65,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     SectionsPagerAdapter mSectionsPagerAdapter;
     ViewPager mViewPager;
     MyApplication myApp;
+    ActionBar actionBar;
 
     private static final String VK_APP_ID = "4697955";
     private final VKSdkListener sdkListener = new VKSdkListener() {
@@ -72,19 +73,19 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         @Override
         public void onAcceptUserToken(VKAccessToken token) {
             Log.d("VkDemoApp", "onAcceptUserToken " + token);
-            startLoading();
+            //startLoading();
         }
 
         @Override
         public void onReceiveNewToken(VKAccessToken newToken) {
             Log.d("VkDemoApp", "onReceiveNewToken " + newToken);
-            startLoading();
+            //startLoading();
         }
 
         @Override
         public void onRenewAccessToken(VKAccessToken token) {
             Log.d("VkDemoApp", "onRenewAccessToken " + token);
-            startLoading();
+            //startLoading();
         }
 
         @Override
@@ -122,14 +123,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         // LOGIN VK !!!
         VKSdk.initialize(sdkListener, VK_APP_ID);
         VKUIHelper.onCreate(this);
-        if (VKSdk.wakeUpSession()) {
-            startLoading();
-        } else {
+        if (!VKSdk.wakeUpSession()) {
             VKSdk.authorize(VKScope.FRIENDS, VKScope.GROUPS, VKScope.PHOTOS, VKScope.WALL);
         }
 
         // Set up the action bar.
-        final ActionBar actionBar = getSupportActionBar();
+        actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
         // Set up the ViewPager and PagerAdapter
@@ -160,7 +159,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             .setTabListener(this));
            }
 
-
+        startLoading();
     }
 
 
@@ -179,6 +178,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         int id = item.getItemId();
 
         // Temp action for test
+        removeFragments();
         if (id == R.id.action_settings) {
             return true;
         }
@@ -258,7 +258,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     }
 
     @Override
-    // Interaction between Fragments and MainActivity
+    // Listen actions from Fragments
     public void onProfileInteraction() {
     }
 
@@ -269,37 +269,60 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     }
 
     public void onMapInteraction() {
+        mViewPager.setCurrentItem(0);
     }
+
 
     // Loading VK info
     private void startLoading() {
         // Getting VK information in AsyncTask
-        //if (!myApp.isLoaded()) {
+
+        if (!myApp.isLoaded()) {
             asyncVKInfo = new AsyncVKInfo();
             asyncVKInfo.execute();
-        //} else {
-        //    showFragments();
-        //}
+        } else {
+            if (cityId!=0) {
+                //showFragments();
+            }
+        }
     }
 
     private void showFragments() {
         // Show content fragments in ViewPager placeholders
+        Fragment currFragment;
+        FragmentTransaction transaction;
+        Fragment newFragment;
+
         for (int i=0;i<4;i++) {
             // Get Fragment by ViewPager Tag
-            Fragment currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(i));
-            FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
-            Fragment newFragment = new Fragment();
+            currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(i));
+            transaction = currFragment.getChildFragmentManager().beginTransaction();
+
             switch (i) {
                 case 0: newFragment = new ProfileFragment().newInstance(); break;
                 case 1: newFragment = new MapFragment().newInstance(); break;
                 case 2: newFragment = new CitiesFragment().newInstance(); break;
                 case 3: newFragment = new CountriesFragment().newInstance(); break;
+                default: newFragment = new Fragment();
             }
             // Add content Fragment to Placeholder
+            newFragment.setRetainInstance(true);
             transaction.add(R.id.fragmentMain, newFragment, "fragment"+i).commit();
             ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
         }
     }
+
+    private void removeFragments() {
+        Fragment currFragment, tempFragment;
+        FragmentTransaction transaction;
+        for (int i=0;i<4;i++) {
+            currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(i));
+            tempFragment = currFragment.getChildFragmentManager().findFragmentByTag("fragment"+i);
+            transaction = currFragment.getChildFragmentManager().beginTransaction();
+            transaction.remove(tempFragment).commit();
+        }
+    }
+
 
     // TODO: Remove Temporary initialization
     public void initClasses () {
@@ -453,8 +476,6 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                         }
                         Users.add(currentUser);
                     }
-
-                    // Store arrays in singleton
                     myApp.setCities(Cities);
                     myApp.setCountries(Countries);
                     myApp.setUsers(Users);
@@ -474,7 +495,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         }
         @Override
         protected void onPostExecute(Void result) {
-
+            // Store arrays in singleton
         }
 
     }
@@ -550,6 +571,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     protected void onDestroy() {
         super.onDestroy();
         VKUIHelper.onDestroy(this);
+        //removeFragments();
+
         // TODO: Remove requests
 //            if (currentRequest != null) {
 //                currentRequest.cancel();
