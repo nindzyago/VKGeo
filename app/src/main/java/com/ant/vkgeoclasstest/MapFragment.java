@@ -81,7 +81,7 @@ public class MapFragment extends Fragment {
             progressCities = (ProgressBar) v.findViewById(R.id.progressCities);
             mapFragment = (SupportMapFragment)
                     getParentFragment().getChildFragmentManager()
-                    .findFragmentByTag("fragmentMap")
+                    .findFragmentByTag("fragment1")
                     .getChildFragmentManager()
                     .findFragmentById(R.id.map);
             map = mapFragment.getMap();
@@ -93,7 +93,7 @@ public class MapFragment extends Fragment {
             asyncFindCities = new AsyncFindCities();
             asyncFindCities.execute();
 
-            map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener(){
+/*            map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener(){
                 @Override
                 public void onInfoWindowClick(Marker marker){
                     Intent intent = new Intent(getActivity().getApplicationContext(), MainActivity.class);
@@ -102,7 +102,7 @@ public class MapFragment extends Fragment {
                     startActivity(intent);
 
                 }
-            });
+            });*/
 
         } else
         {}
@@ -126,6 +126,7 @@ public class MapFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        asyncFindCities.cancel(true);
     }
 
     public interface OnMapInteractionListener {
@@ -210,6 +211,7 @@ public class MapFragment extends Fragment {
                             .snippet("показать друзей")
                             .title(city));
                 } else {*/
+                /*
                 Marker marker = map.addMarker(new MarkerOptions()
                             .position(city.getCoords())
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.knobred))
@@ -217,8 +219,10 @@ public class MapFragment extends Fragment {
                             .snippet(getString(R.string.info_marker))
                             .title(city.getName() + " ("+city.getCountUsers() + ")"));
 
+
                 //map.addMarker(marker);
                 cityMarker.put(marker, city.getId());
+                */
                 progressCities.setProgress(pos);
             }
 

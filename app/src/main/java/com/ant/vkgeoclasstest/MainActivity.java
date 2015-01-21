@@ -3,16 +3,11 @@ package com.ant.vkgeoclasstest;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.SortedSet;
-import java.util.TreeSet;
-
-import com.google.android.gms.maps.SupportMapFragment;
-import com.squareup.picasso.Picasso;
-
 
 import com.ant.vkgeoclasstest.ProfileFragment.OnProfileInteractionListener;
 import com.ant.vkgeoclasstest.CitiesFragment.OnCitiesInteractionListener;
 import com.ant.vkgeoclasstest.MapFragment.OnMapInteractionListener;
-import com.google.android.gms.maps.model.LatLng;
+
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKScope;
 import com.vk.sdk.VKSdk;
@@ -29,12 +24,9 @@ import com.vk.sdk.api.model.VKApiUserFull;
 import com.vk.sdk.api.model.VKList;
 import com.vk.sdk.api.model.VKUsersArray;
 
-import android.app.Activity;
-//import android.app.ActionBar;
 import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBar.Tab;
-import android.support.v7.app.ActionBar.TabListener;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -44,30 +36,26 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener,
         OnProfileInteractionListener, OnCitiesInteractionListener, OnMapInteractionListener,
         CountriesFragment.OnCountriesInteractionListener {
 
-    // Define array to store VK data
+    // Define arrays to store VK data
     private ArrayList<User> Users;
     private SortedSet<City> Cities;
     private SortedSet<Country> Countries;
     private User Profile;
 
+    // Id's to pass current user and cities between fragments
     private int userId, cityId;
-
-    // TODO: remove this temp string
-    String out = "";
 
     // Async Task for loading VK info
     AsyncVKInfo asyncVKInfo;
@@ -78,9 +66,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     ViewPager mViewPager;
     MyApplication myApp;
 
-
     private static final String VK_APP_ID = "4697955";
-
     private final VKSdkListener sdkListener = new VKSdkListener() {
 
         @Override
@@ -123,36 +109,31 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Getting Extra Variables from Intent
-
+        // Getting User and City vars from Intent
         Intent intent = getIntent();
         userId = intent.getIntExtra("userId", 0);
         cityId = intent.getIntExtra("cityId", 0);
 
         myApp = (MyApplication) getApplication();
-
+        if (cityId!=0) {
+            myApp.setLoaded(true);
+        }
 
         // LOGIN VK !!!
         VKSdk.initialize(sdkListener, VK_APP_ID);
         VKUIHelper.onCreate(this);
-
         if (VKSdk.wakeUpSession()) {
             startLoading();
         } else {
             VKSdk.authorize(VKScope.FRIENDS, VKScope.GROUPS, VKScope.PHOTOS, VKScope.WALL);
         }
 
-
-
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
+        // Set up the ViewPager and PagerAdapter
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-
-        // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setOffscreenPageLimit(4);
         mViewPager.setAdapter(mSectionsPagerAdapter);
@@ -179,7 +160,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             .setTabListener(this));
            }
 
-        
+
     }
 
 
@@ -293,16 +274,34 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     // Loading VK info
     private void startLoading() {
         // Getting VK information in AsyncTask
-//        MyApplication myApp = (MyApplication) getApplication();
-        if (!myApp.isLoaded()) {
+        //if (!myApp.isLoaded()) {
             asyncVKInfo = new AsyncVKInfo();
             asyncVKInfo.execute();
-        } else {
-            //showFragments();
+        //} else {
+        //    showFragments();
+        //}
+    }
+
+    private void showFragments() {
+        // Show content fragments in ViewPager placeholders
+        for (int i=0;i<4;i++) {
+            // Get Fragment by ViewPager Tag
+            Fragment currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(i));
+            FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
+            Fragment newFragment = new Fragment();
+            switch (i) {
+                case 0: newFragment = new ProfileFragment().newInstance(); break;
+                case 1: newFragment = new MapFragment().newInstance(); break;
+                case 2: newFragment = new CitiesFragment().newInstance(); break;
+                case 3: newFragment = new CountriesFragment().newInstance(); break;
+            }
+            // Add content Fragment to Placeholder
+            transaction.add(R.id.fragmentMain, newFragment, "fragment"+i).commit();
+            ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
         }
     }
 
-    // Temporary initialization
+    // TODO: Remove Temporary initialization
     public void initClasses () {
 
         MyApplication myApp = (MyApplication) this.getApplication();
@@ -347,7 +346,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         myApp.setProfile(Mike);
 
         for (City city : Cities) {
-            out = out + city.toString() + " (" + city.getCountUsers() + ", "+ Users.size()+ ") | ";
+           // out = out + city.toString() + " (" + city.getCountUsers() + ", "+ Users.size()+ ") | ";
         }
 
         myApp.setCities(Cities);
@@ -357,8 +356,9 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     }
 
     class AsyncVKInfo extends AsyncTask<Void, Void, Void> {
-        private VKRequest usersRequest, profileRequest;
-        private String userName, userCity, userCountry, userPhoto;
+
+        private VKRequest friendsRequest, profileRequest;
+        private String currentPhoto;
         private User currentUser;
         private City currentCity;
         private Country currentCountry;
@@ -376,88 +376,91 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             Users = myApp.getUsers();
             Countries = myApp.getCountries();
 
-            if (usersRequest != null)   { usersRequest.cancel();   }
+            if (friendsRequest != null)   { friendsRequest.cancel();   }
             if (profileRequest != null) { profileRequest.cancel(); }
 
             // Default profile and friends request
-            usersRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
+            friendsRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
             profileRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200"));
 
             // Selected user request
             if (userId != 0) {
-                usersRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
+                friendsRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
                 profileRequest = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, "country,city,id,first_name,last_name,photo_200", VKApiConst.USER_ID, userId));
             }
             
-            VKBatchRequest batch = new VKBatchRequest(usersRequest, profileRequest);
+            // Batch execution of VK requests
+            VKBatchRequest batch = new VKBatchRequest(friendsRequest, profileRequest);
             batch.executeWithListener(new VKBatchRequest.VKBatchRequestListener() {
                 @Override
                 public void onComplete(VKResponse[] responses) {
                     super.onComplete(responses);
 
+                    // Parse Profile request
                     VKList<VKApiUserFull> VKUser = (VKList<VKApiUserFull>) responses[1].parsedModel;
-
                     for (VKApiUserFull user : VKUser) {
                         Profile = new User(user.id, user.toString());
+                        
                         currentCity = new City(user.city.id, user.city.toString());
                         currentCountry = new Country(user.country.id, user.country.toString());
 
                         Profile.setCity(currentCity);
                         Profile.setCountry(currentCountry);
 
-                        userPhoto = "";
-                        //if (user.photo_50 != null) {userPhoto = user.photo_50.toString();  	   }
-                        //if (user.photo_100 != null) {userPhoto = user.photo_100.toString();  	   }
+                        currentPhoto = "";
+                        //if (user.photo_50 != null) {currentPhoto = user.photo_50.toString();  	   }
+                        //if (user.photo_100 != null) {currentPhoto = user.photo_100.toString();  	   }
                         if (user.photo_200 != null) {
-                            userPhoto = user.photo_200.toString();
+                            currentPhoto = user.photo_200.toString();
                         }
-                        Profile.setPhoto(userPhoto);
-                        //Picasso.with(getApplicationContext()).load(url).into(ivUser);
+                        Profile.setPhoto(currentPhoto);
                     }
 
+                    // Parse Friends request
                     VKUsersArray usersArray = (VKUsersArray) responses[0].parsedModel;
                     for (VKApiUserFull user : usersArray) {
                         currentUser = new User(user.id, user.toString());
-                        userPhoto = "";
-                        //if (user.photo_50 != null) {userPhoto = user.photo_50.toString();  	   }
-                        //if (user.photo_100 != null) {userPhoto = user.photo_100.toString();  	   }
+
+                        currentPhoto = "";
+                        //if (user.photo_50 != null) {currentPhoto = user.photo_50.toString();  	   }
+                        //if (user.photo_100 != null) {currentPhoto = user.photo_100.toString();  	   }
                         if (user.photo_200 != null) {
-                            userPhoto = user.photo_200.toString();
+                            currentPhoto = user.photo_200.toString();
                         }
-                        currentUser.setPhoto(userPhoto);
+                        currentUser.setPhoto(currentPhoto);
 
                         if (user.city != null) {
+                            // Make new City object for current user
                             currentCity = new City(user.city.id, user.city.toString());
+                            // If currentCity is exists in global Cities array, replace it with the existing object
                             if (Cities.contains(currentCity)) {
                                 currentCity = Cities.tailSet(currentCity).first();
                             }
                             if (user.country != null) {
+                                // The same with the countries
                                 currentCountry = new Country(user.country.id, user.country.toString());
                                 if (Countries.contains(currentCountry)) {
                                     currentCountry = Countries.tailSet(currentCountry).first();
                                 }
-                                //currentCountry.addUser();
                                 currentCity.setCountry(currentCountry);
                                 Countries.add(currentCountry);
                             }
-                            //currentCity.addUser();
                             currentUser.setCity(currentCity);
                             currentUser.setCountry(currentCountry);
                             Cities.add(currentCity);
                         } else {
-                            //users.add(new User(user.id, user.toString(), cityStr));
-                            //userIds.put(user.toString(), user.id);
+                            // TODO: Decide what to do with null city in friend profile
                         }
                         Users.add(currentUser);
                     }
+
+                    // Store arrays in singleton
                     myApp.setCities(Cities);
                     myApp.setCountries(Countries);
                     myApp.setUsers(Users);
                     myApp.setProfile(Profile);
-
-//                    MyApplication myApp = (MyApplication) getApplication();
-
                     myApp.setLoaded(true);
+
                     showFragments();
 
                 }
@@ -471,42 +474,11 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         }
         @Override
         protected void onPostExecute(Void result) {
-            // Adding Profile Fragment as a Placeholder 1 child Fragment
 
         }
 
     }
 
-    private void showFragments() {
-        Fragment currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(0));
-        Fragment newFragment = new ProfileFragment().newInstance();
-        FragmentTransaction transaction = currFragment.getChildFragmentManager().beginTransaction();
-        transaction.add(R.id.fragmentMain, newFragment, "fragmentProfile").commit();
-
-        ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
-
-        currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(1));
-        newFragment = new MapFragment().newInstance();
-        transaction = currFragment.getChildFragmentManager().beginTransaction();
-        transaction.add(R.id.fragmentMain, newFragment, "fragmentMap").commit();
-
-        ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
-
-        currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(2));
-        newFragment = new CitiesFragment().newInstance();
-        transaction = currFragment.getChildFragmentManager().beginTransaction();
-        transaction.add(R.id.fragmentMain, newFragment, "fragmentCities").commit();
-
-        ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
-
-        currFragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(3));
-        newFragment = new CountriesFragment().newInstance();
-        transaction = currFragment.getChildFragmentManager().beginTransaction();
-        transaction.add(R.id.fragmentMain, newFragment, "fragmentCountries").commit();
-
-        ((ProgressBar) currFragment.getView().findViewById(R.id.progressBar)).setVisibility(View.GONE);
-
-    }
 
     public static class PlaceholderFragment extends Fragment {
         /**
@@ -546,14 +518,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         @Override
         public void onViewCreated(View view, Bundle savedInstanceState) {
             super.onViewCreated(view, savedInstanceState);
-            if (getArguments() != null) {
+ /*           if (getArguments() != null) {
                 sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
                 switch (sectionNumber) {
                     case 1: {
                     }
                 }
-            }
-
+            }*/
         }
 
         @Override
@@ -579,6 +550,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     protected void onDestroy() {
         super.onDestroy();
         VKUIHelper.onDestroy(this);
+        // TODO: Remove requests
 //            if (currentRequest != null) {
 //                currentRequest.cancel();
 //            }
