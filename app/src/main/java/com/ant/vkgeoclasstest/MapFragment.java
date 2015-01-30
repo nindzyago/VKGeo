@@ -29,12 +29,12 @@ import java.util.SortedSet;
 /**
  * Created by Mike Antipiev on 03.12.14.
  *
- * MapFragment class holds Google Map, and shows cities on it
+ * MapFragment class shows Google Map, and cities on it
  *
  */
 
-
 public class MapFragment extends Fragment {
+
 
     private SupportMapFragment mapFragment;
     private GoogleMap map;

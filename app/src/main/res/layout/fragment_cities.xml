@@ -4,22 +4,10 @@
     android:id="@+id/fragmentCities"
     android:orientation="horizontal">
 
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:id="@+id/ltCitiesTexts">
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="vertical"
+    <com.github.mikephil.charting.charts.HorizontalBarChart
+        android:id="@+id/chartCities"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/ltCitiesBars">
-
-
-    </LinearLayout>
-
+        android:layout_height="wrap_content"
+        />
 
 </LinearLayout>

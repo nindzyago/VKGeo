@@ -48,23 +48,36 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         OnProfileInteractionListener, OnCitiesInteractionListener, OnMapInteractionListener,
         CountriesFragment.OnCountriesInteractionListener {
 
-    // Define arrays to store VK data
+    /**
+     * Define arrays to store VK data
+     */
     private ArrayList<User> Users;
     private SortedSet<City> Cities;
     private SortedSet<Country> Countries;
     private User Profile;
 
-    // Id's to pass current user and cities between fragments
+    /**
+     * Id's to pass current user and cities between fragments
+     */
     private int userId, cityId;
 
-    // Async Task for loading VK info
+    /**
+     * Async Task for loading VK info
+     */
     AsyncVKInfo asyncVKInfo;
+
+    /**
+     * Singleton app variable to retrieve global arrays
+     */
+    MyApplication myApp;
 
     //boolean ProfileLoaded=false;
 
+    /**
+     * UI variables
+     */
     SectionsPagerAdapter mSectionsPagerAdapter;
     ViewPager mViewPager;
-    MyApplication myApp;
     ActionBar actionBar;
 
     private static final String VK_APP_ID = "4697955";
@@ -110,7 +123,9 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Getting User and City vars from Intent
+        /**
+         * Getting User and City vars from Intent
+         */
         Intent intent = getIntent();
         userId = intent.getIntExtra("userId", 0);
         cityId = intent.getIntExtra("cityId", 0);
@@ -120,7 +135,9 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             myApp.setLoaded(true);
         }
 
-        // LOGIN VK !!!
+        /**
+         * Login to vk.com
+         */
         VKSdk.initialize(sdkListener, VK_APP_ID);
         VKUIHelper.onCreate(this);
         if (!VKSdk.wakeUpSession()) {
