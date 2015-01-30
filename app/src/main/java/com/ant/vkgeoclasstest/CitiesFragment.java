@@ -16,7 +16,14 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.utils.XLabels;
+import com.github.mikephil.charting.utils.YLabels;
 import com.philjay.valuebar.ValueBar;
 import com.philjay.valuebar.ValueBarSelectionListener;
 import com.philjay.valuebar.colors.RedToGreenFormatter;
@@ -32,10 +39,10 @@ import java.util.SortedSet;
  */
 
 
-public class CitiesFragment extends Fragment implements ValueBarSelectionListener {
+public class CitiesFragment extends Fragment {
 
-    private ValueBar valueBar;
     private SortedSet<City> Cities;
+    private BarChart mChart;
 
 //    Interaction with MainActivity
     private OnCitiesInteractionListener mListener;
@@ -64,9 +71,93 @@ public class CitiesFragment extends Fragment implements ValueBarSelectionListene
         MyApplication myApp = (MyApplication) getActivity().getApplication();
         if (myApp.isLoaded()) {
             Cities = myApp.getCities();
+            mChart = (BarChart) v.findViewById(R.id.chartCities);
+            //FIXME:  Bar Shadow is not yet supported
+            mChart.setDrawBarShadow(false);
+
+            //mChart.setOnChartValueSelectedListener(this);
+
+            // enable the drawing of values
+            mChart.setDrawYValues(true);
+
+            mChart.setDrawValueAboveBar(true);
+
+            mChart.setDescription("");
+
+            // if more than 60 entries are displayed in the chart, no values will be
+            // drawn
+            mChart.setMaxVisibleValueCount(60);
+
+            // disable 3D
+            mChart.set3DEnabled(false);
+
+            // scaling can now only be done on x- and y-axis separately
+            mChart.setPinchZoom(false);
+
+            // draw shadows for each bar that show the maximum value
+            // mChart.setDrawBarShadow(true);
+
+            //mChart.setUnit(" €");
+
+            // mChart.setDrawXLabels(false);
+
+            mChart.setDrawGridBackground(false);
+ //           mChart.setDrawHorizontalGrid(true);
+ //           mChart.setDrawVerticalGrid(false);
+            // mChart.setDrawYLabels(false);
+
+            // sets the text size of the values inside the chart
+            mChart.setValueTextSize(10f);
+
+            mChart.setDrawBorder(false);
+            // mChart.setBorderPositions(new BorderPosition[] {BorderPosition.LEFT,
+            // BorderPosition.RIGHT});
+
+            //Typeface tf = Typeface.createFromAsset(getActivity().getAssets(), "OpenSans-Regular.ttf");
+
+            /*XLabels xl = mChart.getXLabels();
+            xl.setPosition(XLabels.XLabelPosition.BOTTOM);
+            xl.setCenterXLabelText(true);
+            //xl.setTypeface(tf);
+
+            YLabels yl = mChart.getYLabels();
+            //yl.setTypeface(tf);
+            yl.setLabelCount(8);
+            yl.setPosition(YLabels.YLabelPosition.BOTH_SIDED);
+*/
+            //mChart.setValueTypeface(tf);
+
+            // setting data
+
+            // change the color of the center-hole
+            //mChart.setHoleColor(Color.rgb(235, 235, 235));
+
             //LayoutInflater vb_inflater = (LayoutInflater) v.getContext()
             //        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            int i=1;
+
+            ArrayList<String> xVals = new ArrayList<String>();
+            ArrayList<BarEntry> yVals = new ArrayList<BarEntry>();
+
+            int i=0;
+            for (City city : Cities) {
+                xVals.add(city.getName() + "(" + city.getCountUsers() + ")");
+                yVals.add(new BarEntry(city.getCountUsers(), i));
+                i++;
+            }
+
+            BarDataSet set1 = new BarDataSet(yVals, "DataSet");
+            //set1.setBarSpacePercent(35f);
+
+            ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
+            dataSets.add(set1);
+
+            BarData data = new BarData(xVals, dataSets);
+
+            mChart.setData(data);
+            //mChart.setMinimumWidth(20);
+
+
+            /*i=1;
             for (City city : Cities) {
                 LinearLayout ltCitiesTexts = (LinearLayout) v.findViewById(R.id.ltCitiesTexts);
                 LinearLayout ltCitiesBars = (LinearLayout) v.findViewById(R.id.ltCitiesBars);
@@ -91,7 +182,7 @@ public class CitiesFragment extends Fragment implements ValueBarSelectionListene
                 ltCitiesBars.addView(pbCities);
                 //ltCitiesBars.addView(vbCitiesBars);
             }
-            //setup();
+            //setup();*/
 
         }
         return (View) v;
@@ -101,7 +192,7 @@ public class CitiesFragment extends Fragment implements ValueBarSelectionListene
 
         //Typeface tf = Typeface.createFromAsset(getAssets(), "OpenSans-Light.ttf");
 
-        ValueBar bar = new ValueBar(getActivity().getApplicationContext());
+   /*     ValueBar bar = new ValueBar(getActivity().getApplicationContext());
 
             bar.setMinMax(0, 1000);
             bar.animate(0, 900, 1500);
@@ -119,18 +210,8 @@ public class CitiesFragment extends Fragment implements ValueBarSelectionListene
             bar.setDrawMinMaxText(false);
             bar.setTouchEnabled(false);
             //bar.setDrawValueText(false);
-            //bar.setColor(Color.BLUE);
+            //bar.setColor(Color.BLUE);*/
 
-    }
-
-    @Override
-    public void onSelectionUpdate(float val, float maxval, float minval, ValueBar bar) {
-        Log.i("ValueBar", "Value selection update: " + val);
-    }
-
-    @Override
-    public void onValueSelected(float val, float maxval, float minval, ValueBar bar) {
-        Log.i("ValueBar", "Value selected: " + val);
     }
 
     @Override
