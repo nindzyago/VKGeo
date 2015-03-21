@@ -1,6 +1,8 @@
 package com.ant.vkgeoclasstest;
 
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.SortedSet;
 
@@ -8,6 +10,15 @@ import com.ant.vkgeoclasstest.ProfileFragment.OnProfileInteractionListener;
 import com.ant.vkgeoclasstest.CitiesFragment.OnCitiesInteractionListener;
 import com.ant.vkgeoclasstest.MapFragment.OnMapInteractionListener;
 
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.fusiontables.Fusiontables;
+import com.google.api.services.fusiontables.FusiontablesScopes;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKScope;
 import com.vk.sdk.VKSdk;
@@ -195,11 +206,63 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         int id = item.getItemId();
 
         // Temp action for test
-        removeFragments();
+        //removeFragments();
         if (id == R.id.action_settings) {
+            GetFusionTablesData();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Be sure to specify the name of your application. If the application name is {@code null} or
+     * blank, the application will log a warning. Suggested format is "MyCompany-ProductName/1.0".
+     */
+    private static final String APPLICATION_NAME = "ANT-VKGeo/1.0";
+
+    /** Directory to store user credentials. */
+    private static final java.io.File DATA_STORE_DIR =
+            new java.io.File(System.getProperty("user.home"), ".store/fusion_tables_sample");
+
+    /**
+     * Global instance of the {@link DataStoreFactory}. The best practice is to make it a single
+     * globally shared instance across your application.
+     */
+    private static FileDataStoreFactory dataStoreFactory;
+
+    /** Global instance of the HTTP transport. */
+    private static HttpTransport httpTransport;
+
+    /** Global instance of the JSON factory. */
+    private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+
+    private static Fusiontables fusiontables;
+
+    /** Authorizes the installed application to access user's protected data. */
+    private static Credential authorize() throws Exception {
+        // load client secrets
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
+                JSON_FACTORY, new InputStreamReader(
+                        FusionTablesSample.class.getResourceAsStream("/client_secrets.json")));
+        if (clientSecrets.getDetails().getClientId().startsWith("Enter")
+                || clientSecrets.getDetails().getClientSecret().startsWith("Enter ")) {
+            System.out.println(
+                    "Enter Client ID and Secret from https://code.google.com/apis/console/?api=fusiontables "
+                            + "into fusiontables-cmdline-sample/src/main/resources/client_secrets.json");
+            System.exit(1);
+        }
+        // set up authorization code flow
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                httpTransport, JSON_FACTORY, clientSecrets,
+                Collections.singleton(FusiontablesScopes.FUSIONTABLES)).setDataStoreFactory(
+                dataStoreFactory).build();
+        // authorize
+        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
+    }
+
+
+    private void GetFusionTablesData() {
+
     }
 
     // Getting Tag name of a Fragment by position
