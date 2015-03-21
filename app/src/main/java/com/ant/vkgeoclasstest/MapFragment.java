@@ -2,6 +2,8 @@ package com.ant.vkgeoclasstest;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
@@ -191,6 +193,9 @@ public class MapFragment extends Fragment {
         return p1;
     }
 
+    public static boolean isBetween(int x, int lower, int upper) {
+        return lower <= x && x <= upper;
+    }
 
     class AsyncFindCities extends AsyncTask<Void, Map<Integer, City>, Void> {
 
@@ -246,11 +251,23 @@ public class MapFragment extends Fragment {
                             .title(city.getName() + " ("+city.getCountUsers() + ")"));
                 } else {
                     // Else draw a regular marker
+                    // Resize
+                    int resMarker=0;
+
+                    if (isBetween(city.getCountUsers(), 0, 2)) {  resMarker = R.drawable.knob_red_24; } else
+                    if (isBetween(city.getCountUsers(), 3, 5)) { resMarker = R.drawable.knob_red_32; } else
+                    if (isBetween(city.getCountUsers(), 6, 10)) { resMarker = R.drawable.knob_red_32; } else
+                    if (isBetween(city.getCountUsers(), 11, 20)) { resMarker = R.drawable.knob_red_48; } else
+                    if (city.getCountUsers() > 20) { resMarker = R.drawable.knob_red_64; }
+
+                    Bitmap b = BitmapFactory.decodeResource(getResources(), resMarker);
+                    Bitmap bhalfsize = Bitmap.createScaledBitmap(b, b.getWidth() / 2, b.getHeight() / 2, false);
                     marker = map.addMarker(new MarkerOptions()
                             .position(city.getCoords())
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.knobred))
+                            .icon(BitmapDescriptorFactory.fromBitmap(bhalfsize))
                                     // .defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
                             .snippet(getString(R.string.info_marker))
+
                             .title(city.getName() + " (" + city.getCountUsers() + ")"));
                 }
                 // Bind marker to city
