@@ -2,6 +2,9 @@ package com.ant.vkgeoclasstest;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.LevelListDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
@@ -246,12 +249,31 @@ public class MapFragment extends Fragment {
                             .title(city.getName() + " ("+city.getCountUsers() + ")"));
                 } else {
                     // Else draw a regular marker
-                    marker = map.addMarker(new MarkerOptions()
-                            .position(city.getCoords())
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.knobred))
-                                    // .defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                            .snippet(getString(R.string.info_marker))
-                            .title(city.getName() + " (" + city.getCountUsers() + ")"));
+
+                    // Resize marker
+                    if (city.getCountUsers() < 5) {
+                        //LevelListDrawable d = (LevelListDrawable) getResources().getDrawable(R.drawable.knob_red);
+                        //d.setLevel(1234);
+                        //BitmapDrawable bd = (BitmapDrawable) d.getCurrent();
+                        Bitmap b = (Bitmap) getResources().getDrawable(R.drawable.knob_red);
+                        Bitmap bhalfsize = Bitmap.createScaledBitmap( , b.getWidth() / 2, b.getHeight() / 2, false);
+                        marker = map.addMarker(new MarkerOptions()
+                                .position(city.getCoords())
+                                .icon(BitmapDescriptorFactory.fromBitmap(bhalfsize))
+                                        // .defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                                .snippet(getString(R.string.info_marker))
+
+                                .title(city.getName() + " (" + city.getCountUsers() + ")"));
+
+                    } else{
+                        marker = map.addMarker(new MarkerOptions()
+                                .position(city.getCoords())
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.knob_red))
+                                        // .defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                                .snippet(getString(R.string.info_marker))
+
+                                .title(city.getName() + " (" + city.getCountUsers() + ")"));
+                    }
                 }
                 // Bind marker to city
                 cityMarker.put(marker, city);
