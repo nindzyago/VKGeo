@@ -3,12 +3,9 @@ package com.ant.vkgeoclasstest;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-<<<<<<< HEAD
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.LevelListDrawable;
-=======
 import android.graphics.BitmapFactory;
->>>>>>> hotfix/1.7.1
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
@@ -256,33 +253,8 @@ public class MapFragment extends Fragment {
                             .title(city.getName() + " ("+city.getCountUsers() + ")"));
                 } else {
                     // Else draw a regular marker
-<<<<<<< HEAD
 
                     // Resize marker
-                    if (city.getCountUsers() < 5) {
-                        //LevelListDrawable d = (LevelListDrawable) getResources().getDrawable(R.drawable.knob_red);
-                        //d.setLevel(1234);
-                        //BitmapDrawable bd = (BitmapDrawable) d.getCurrent();
-                        Bitmap b = (Bitmap) getResources().getDrawable(R.drawable.knob_red);
-                        Bitmap bhalfsize = Bitmap.createScaledBitmap( , b.getWidth() / 2, b.getHeight() / 2, false);
-                        marker = map.addMarker(new MarkerOptions()
-                                .position(city.getCoords())
-                                .icon(BitmapDescriptorFactory.fromBitmap(bhalfsize))
-                                        // .defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                                .snippet(getString(R.string.info_marker))
-
-                                .title(city.getName() + " (" + city.getCountUsers() + ")"));
-
-                    } else{
-                        marker = map.addMarker(new MarkerOptions()
-                                .position(city.getCoords())
-                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.knob_red))
-                                        // .defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                                .snippet(getString(R.string.info_marker))
-
-                                .title(city.getName() + " (" + city.getCountUsers() + ")"));
-                    }
-=======
                     // Resize
                     int resMarker=0;
 
@@ -301,7 +273,6 @@ public class MapFragment extends Fragment {
                             .snippet(getString(R.string.info_marker))
 
                             .title(city.getName() + " (" + city.getCountUsers() + ")"));
->>>>>>> hotfix/1.7.1
                 }
                 // Bind marker to city
                 cityMarker.put(marker, city);
